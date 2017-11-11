@@ -6,3 +6,5 @@
 # System Files
 .DS_Store
 Thumbs.db
+/.doac
+doac.yaml
