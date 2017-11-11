@@ -1,0 +1,12 @@
+# Create repo containing jenkins seed job for all
+  microservices associated with the project.
+
+# Create repo for each microservice containing
+  Initial source code pertaining to role and stack
+  Jenkinsfile
+  Dockerfile
+  sonar-project.properties
+  docker-compose for local container orchestration
+  Kubernetes deployment definition
+  .gitignore
+  .dockerignore

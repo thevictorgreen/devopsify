@@ -1,0 +1,22 @@
+OSX
+
+# COPY scripts folder into home directory
+cp -r scripts ~/scripts
+
+# EDIT .bash_profile
+nano ~/.bash_profile
+
+# PLACE THE FOLLOW AT THE END OF PATH FOR EXAMPLE
+export PATH=$PATH:~/scripts
+
+# SAVE AND EXIT
+cntrl + x
+
+
+# RELOAD .bash_profile
+source ~/.bash_profile
+
+# SMOKE TEST
+devopsify
+
+# ENJOY!!
