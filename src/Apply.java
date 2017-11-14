@@ -168,6 +168,81 @@ public class Apply {
     }
   }
 
+  public void createK8sFolder(String folderName) {
+    StringBuilder sb = new StringBuilder();
+    sb.append("mkdir " + folderName + "/k8s");
+    if ( ExecuteBashScript.exec(sb) ) {
+      System.out.println("SUCCESS");
+    }
+    else {
+      System.out.println("FAILURE");
+    }
+  }
+
+  public void createK8sDeployment(String msvcName, String dockerUsername) {
+
+    String deployment =
+    "apiVersion: apps/v1beta2\n" +
+    "kind: Deployment\n" +
+    "metadata:\n" +
+    "  name: "+msvcName+"-deployment\n" +
+    "  labels:\n" +
+    "    app: "+msvcName+"\n" +
+    "spec:\n" +
+    "  replicas: 2\n" +
+    "  selector:\n" +
+    "    matchLabels:\n" +
+    "      app: "+msvcName+"\n" +
+    "  template:\n" +
+    "    metadata:\n" +
+    "      labels:\n" +
+    "        app: "+msvcName+"\n" +
+    "    spec:\n" +
+    "      containers:\n" +
+    "        - name: "+msvcName+"\n" +
+    "          image: "+dockerUsername + msvcName+"\n" +
+    "          ports:\n" +
+    "            - name: "+msvcName+"-port\n" +
+    "              containerPort: REPLACE-WITH-CONTAINER-PORT-NUMBER\n"
+    ;
+
+    try {
+      BufferedWriter writer = new BufferedWriter(new FileWriter(msvcName + "/k8s/" + msvcName + "-deployment.yaml", true));
+      writer.write(deployment);
+      writer.close();
+    } catch (IOException ioe) {
+      ioe.printStackTrace();
+    }
+  }
+
+
+  public void createK8sService(String msvcName) {
+
+    String service =
+    "apiVersion: v1\n" +
+    "kind: Service\n" +
+    "metadata:\n" +
+    "  name: "+msvcName+"-service\n" +
+    "spec:\n" +
+    "  ports:\n" +
+    "    - port: REPLACE-WITH-PORT-TO-FOWARD-TO-30000-32767\n" +
+    "      nodePort: SAME-PORT-NUMBER-AS-ABOVE\n" +
+    "      targetPort: "+msvcName+"-port\n" +
+    "      protocol: TCP\n" +
+    "  selector:\n" +
+    "    app: "+msvcName+"\n" +
+    "  type: NodePort\n"
+    ;
+
+    try {
+      BufferedWriter writer = new BufferedWriter(new FileWriter(msvcName + "/k8s/" + msvcName + "-service.yaml", true));
+      writer.write(service);
+      writer.close();
+    } catch (IOException ioe) {
+      ioe.printStackTrace();
+    }
+  }
+
   public void pushIt(String msvcName, String repo) {
     RunCommand.exec("git -C " + msvcName + "/  status");
     System.out.println(repo);
@@ -182,6 +257,9 @@ public class Apply {
         createCacheFolder( this.cloudApp.getMicroservices()[i].get("name") );
         downloadInitCodeBase( this.cloudApp.getMicroservices()[i].get("initcodebase"), this.cloudApp.getMicroservices()[i].get("name") );
         copyCacheIntoRepo(this.cloudApp.getMicroservices()[i].get("name"));
+        createK8sFolder( this.cloudApp.getMicroservices()[i].get("name") );
+        createK8sDeployment( this.cloudApp.getMicroservices()[i].get("name"), this.cloudApp.getAppsettings().get("dockerhubuser") );
+        createK8sService( this.cloudApp.getMicroservices()[i].get("name") );
         microservices[i].replace("status","applied");
       }
     }

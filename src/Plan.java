@@ -77,7 +77,7 @@ public class Plan {
         System.out.println("");
         System.out.println(ANSI_PURPLE+"    Seed Project:"+ANSI_RESET);
         System.out.println(ANSI_PURPLE+"      "+cloudApp.getSeedsettings().get("name")+""+ANSI_RESET);
-        System.out.println(ANSI_YELLOW+"      (local repo) "+cloudApp.getSeedsettings().get("repourl")+""+ANSI_RESET);
+        System.out.println(ANSI_RED+"      (local repo) "+cloudApp.getSeedsettings().get("repourl")+""+ANSI_RESET);
         System.out.println("");
       }
 
@@ -91,12 +91,12 @@ public class Plan {
       for (int i = 0;i < cloudApp.getMicroservices().length;i++) {
         if ( cloudApp.getMicroservices()[i].get("status").equals("planned") ) {
           System.out.println(ANSI_PURPLE+"      "+cloudApp.getMicroservices()[i].get("name")+""+ANSI_RESET);
-          System.out.println(ANSI_YELLOW+"      (local repo) "+cloudApp.getMicroservices()[i].get("repourl")+""+ANSI_RESET);
+          System.out.println(ANSI_RED+"      (local repo) "+cloudApp.getMicroservices()[i].get("repourl")+""+ANSI_RESET);
           System.out.println("");
         }
       }
       System.out.println(ANSI_YELLOW+"Todo:"+ANSI_RESET);
-      System.out.println(ANSI_YELLOW+"  devopsify --apply"+ANSI_RESET);
+      System.out.println(ANSI_RED+"  devopsify --apply"+ANSI_RESET);
     }
     else {
       System.out.println("NO PLAN ON DECK. ADD A NEW MICROSERVICE TO doac.yaml");
