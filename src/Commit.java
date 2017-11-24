@@ -121,7 +121,7 @@ public class Commit {
           }
         }
         if ( serviceMatch ) {
-          pushIt( serviceToCommit, repo );
+          pushItSeed( serviceToCommit, repo );
           saveSettings( serviceToCommit );
         }
         else {

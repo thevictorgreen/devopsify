@@ -66,7 +66,8 @@ public class Init {
       writer.append("    tier: frontend\n");
       writer.append("    stack: angular4\n");
       writer.append("    jumpstart: yes\n");
-      writer.append("    initcodebase: https://github.com/thevictorgreen/devopsify-angular-simpliq.git\n");
+      writer.append("    sourcerepo: devopsify-angular-simpliq\n");
+      writer.append("    initcodebase: https://codeload.github.com/thevictorgreen/devopsify-angular-simpliq/zip/master\n");
       writer.append("    status:\n");
       writer.append("    repourl:\n");
       writer.append("\n");

@@ -148,10 +148,19 @@ public class Apply {
     return status;
   }
 
-  public boolean downloadInitCodeBase(String initcodebase, String cache) {
-    int exitValue = RunCommand.exec("git clone " + initcodebase + " .doac/cache/" + cache);
+  public boolean downloadInitCodeBase(String initcodebase, String cache, String sourcerepo) {
+    /*int exitValue = RunCommand.exec("git clone " + initcodebase + " .doac/cache/" + cache);
+    boolean status = exitValue == 0 ? true: false;
+    return status;*/
+
+    int exitValue = RunCommand.exec("wget -q --show-progress --https-only --timestamping " + initcodebase);
+        exitValue = RunCommand.exec("unzip master");
+        exitValue = RunCommand.exec("mv " + sourcerepo + "-master .doac/cache/" + cache);
+        //exitValue = RunCommand.exec("mv .doac/cache/" + sourcerepo + "-master .doac/cache/" + cache);
+        exitValue = RunCommand.exec("rm master");
     boolean status = exitValue == 0 ? true: false;
     return status;
+
   }
 
   public void copyCacheIntoRepo(String cache) {
@@ -254,8 +263,8 @@ public class Apply {
       if ( cloudApp.getMicroservices()[i].get("status").equals("planned") ) {
         createFolder( this.cloudApp.getMicroservices()[i].get("name") );
         gitInit( this.cloudApp.getMicroservices()[i].get("name") );
-        createCacheFolder( this.cloudApp.getMicroservices()[i].get("name") );
-        downloadInitCodeBase( this.cloudApp.getMicroservices()[i].get("initcodebase"), this.cloudApp.getMicroservices()[i].get("name") );
+        //createCacheFolder( this.cloudApp.getMicroservices()[i].get("name") );
+        downloadInitCodeBase( this.cloudApp.getMicroservices()[i].get("initcodebase"), this.cloudApp.getMicroservices()[i].get("name"), this.cloudApp.getMicroservices()[i].get("sourcerepo") );
         copyCacheIntoRepo(this.cloudApp.getMicroservices()[i].get("name"));
         createK8sFolder( this.cloudApp.getMicroservices()[i].get("name") );
         createK8sDeployment( this.cloudApp.getMicroservices()[i].get("name"), this.cloudApp.getAppsettings().get("dockerhubuser") );
