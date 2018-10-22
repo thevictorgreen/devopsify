@@ -104,7 +104,7 @@ public class Apply {
         "        }\n" +
         "      }\n" +
         "      triggers {\n" +
-        "        githubPush();\n" +
+        "        gitlabPush();\n" +
         "      }\n" +
         "    }\n" +
         "  }\n" +
@@ -191,25 +191,29 @@ public class Apply {
   public void createK8sDeployment(String msvcName, String dockerUsername) {
 
     String deployment =
-    "apiVersion: apps/v1beta2\n" +
+    "apiVersion: apps/v1\n" +
     "kind: Deployment\n" +
     "metadata:\n" +
     "  name: "+msvcName+"-deployment\n" +
+    "  namespace: "+msvcName+"-development\n" +
     "  labels:\n" +
     "    app: "+msvcName+"\n" +
     "spec:\n" +
-    "  replicas: 2\n" +
+    "  replicas: 1\n" +
     "  selector:\n" +
     "    matchLabels:\n" +
     "      app: "+msvcName+"\n" +
+    "  strategy:\n" +
+    "    type: Recreate\n" +
     "  template:\n" +
     "    metadata:\n" +
     "      labels:\n" +
     "        app: "+msvcName+"\n" +
     "    spec:\n" +
     "      containers:\n" +
-    "        - name: "+msvcName+"\n" +
-    "          image: "+dockerUsername + msvcName+"\n" +
+    "        - name: "+msvcName+"-container\n" +
+    "          imagePullPolicy: Always" +
+    "          image: "+dockerUsername+"/"+msvcName+"\n" +
     "          ports:\n" +
     "            - name: "+msvcName+"-port\n" +
     "              containerPort: REPLACE-WITH-CONTAINER-PORT-NUMBER\n"
@@ -232,15 +236,17 @@ public class Apply {
     "kind: Service\n" +
     "metadata:\n" +
     "  name: "+msvcName+"-service\n" +
+    "  namespace: "+msvcName+"-development\n" +
+    "  labels:\n" +
+    "    app: "+msvcName+"\n" +
     "spec:\n" +
+    "  type: ClusterIP" +
     "  ports:\n" +
-    "    - port: REPLACE-WITH-PORT-TO-FOWARD-TO-30000-32767\n" +
-    "      nodePort: SAME-PORT-NUMBER-AS-ABOVE\n" +
-    "      targetPort: "+msvcName+"-port\n" +
+    "    - port: REPLACE-WITH-CONTAINER-PORT-EXAMPLE-80-FOR-NGINX-3000-FOR-NODEJS\n" +
+    "      targetPort: REPLACE-WITH-CONTAINER-PORT-EXAMPLE-80-FOR-NGINX-3000-FOR-NODEJS\n" +
     "      protocol: TCP\n" +
     "  selector:\n" +
-    "    app: "+msvcName+"\n" +
-    "  type: NodePort\n"
+    "    app: "+msvcName+"\n"
     ;
 
     try {
