@@ -212,7 +212,7 @@ public class Apply {
     "    spec:\n" +
     "      containers:\n" +
     "        - name: "+msvcName+"-container\n" +
-    "          imagePullPolicy: Always" +
+    "          imagePullPolicy: Always\n" +
     "          image: "+dockerUsername+"/"+msvcName+"\n" +
     "          ports:\n" +
     "            - name: "+msvcName+"-port\n" +
@@ -240,7 +240,7 @@ public class Apply {
     "  labels:\n" +
     "    app: "+msvcName+"\n" +
     "spec:\n" +
-    "  type: ClusterIP" +
+    "  type: ClusterIP\n" +
     "  ports:\n" +
     "    - port: REPLACE-WITH-CONTAINER-PORT-EXAMPLE-80-FOR-NGINX-3000-FOR-NODEJS\n" +
     "      targetPort: REPLACE-WITH-CONTAINER-PORT-EXAMPLE-80-FOR-NGINX-3000-FOR-NODEJS\n" +
