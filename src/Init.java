@@ -54,7 +54,7 @@ public class Init {
       writer.append("appsettings:\n");
       writer.append("  name: mycoolapp\n");
       writer.append("  basedomain: mydomain.com\n");
-      writer.append("  sourcecoderepobase: https://github.com/username/\n");
+      writer.append("  sourcecoderepobase: https://gitlab.com/mycoolapp/\n");
       writer.append("  dockerhubuser: username\n");
       writer.append("  provider: digitalocean\n");
       writer.append("  lifecycle: initialized\n");

@@ -149,7 +149,7 @@ public class Apply {
     "kind: Ingress\n" +
     "metadata:\n" +
     "  name: "+appName+"-ingress\n" +
-    "  namespace: "+appName+"-deployment\n" +
+    "  namespace: "+appName+"-development\n" +
     "  annotations:\n" +
     "    kubernetes.io/ingress.class: traefik\n" +
     "spec:\n" +
