@@ -141,6 +141,59 @@ public class Apply {
     }
   }
 
+
+  public void createAppIngress(String appName) {
+
+    String pre =
+    "apiVersion: extensions/v1beta1\n" +
+    "kind: Ingress\n" +
+    "metadata:\n" +
+    "  name: "+appName+"-ingress\n" +
+    "  namespace: "+appName+"-deployment\n" +
+    "  annotations:\n" +
+    "    kubernetes.io/ingress.class: traefik\n" +
+    "spec:\n" +
+    "  rules:\n"
+    ;
+
+    String[] microservices = new String[100];
+    String msvcName = "";
+    String basedomain = this.cloudApp.getAppsettings().get("basedomain");
+    String internalsvcport ="";
+    for (int i = 0;i < cloudApp.getMicroservices().length;i++) {
+      if (i == 0){
+        continue;
+      }
+      msvcName = this.cloudApp.getMicroservices()[i].get("name");
+      internalsvcport = this.cloudApp.getMicroservices()[i].get("internalsvcport");
+      microservices[i-1] =
+      "  - host: "+msvcName+ "."+basedomain+"\n" +
+      "    http:\n" +
+      "      paths:\n" +
+      "      - path: /\n" +
+      "        backend:\n" +
+      "          serviceName: "+msvcName+"-service\n" +
+      "          servicePort: "+internalsvcport+"\n"
+      ;
+    }
+
+    String grooveMeBabyTonight = pre;
+    for (int i = 0;i < cloudApp.getMicroservices().length;i++) {
+      if (microservices[i] != null) {
+        grooveMeBabyTonight += microservices[i];
+      }
+    }
+
+    RunCommand.exec("rm "+ appName + "-globalsettings/k8s/*.yaml");
+    try {
+      BufferedWriter writer = new BufferedWriter(new FileWriter(appName + "-globalsettings/k8s/app-ingress.yaml", true));
+      writer.write(grooveMeBabyTonight);
+      writer.close();
+    } catch (IOException ioe) {
+      ioe.printStackTrace();
+    }
+  }
+
   //Create cache folder
   public boolean createCacheFolder(String name) {
     int exitValue = RunCommand.exec("mkdir .doac/cache/" + name);
@@ -188,14 +241,86 @@ public class Apply {
     }
   }
 
-  public void createK8sDeployment(String msvcName, String dockerUsername) {
+  public void createK8sDatabaseService(String msvcName, String dockerUsername, String appName) {
+
+    String database =
+    "apiVersion: v1\n" +
+    "kind: Service\n" +
+    "metadata:\n" +
+    "  name: "+msvcName+"-db-service\n" +
+    "  namespace: "+appName+"-development\n" +
+    "  labels:\n" +
+    "    app: "+msvcName+"-db\n" +
+    "spec:\n" +
+    "  ports:\n" +
+    "  - port: 27017\n" +
+    "    targetPort: 27017\n" +
+    "    protocol: TCP\n" +
+    "  selector:\n" +
+    "    app: "+msvcName+"-db\n" +
+    "---\n" +
+    "apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2\n" +
+    "kind: Deployment\n" +
+    "metadata:\n" +
+    "  name: "+msvcName+"-db-deployment\n" +
+    "  namespace: "+appName+"-development\n" +
+    "spec:\n" +
+    "  selector:\n" +
+    "    matchLabels:\n" +
+    "      app: "+msvcName+"-db\n" +
+    "  strategy:\n" +
+    "    type: Recreate\n" +
+    "  template:\n" +
+    "    metadata:\n" +
+    "      labels:\n" +
+    "        app: "+msvcName+"-db\n" +
+    "    spec:\n" +
+    "      containers:\n" +
+    "      - image: mongo\n" +
+    "        name: "+msvcName+"-db-container\n" +
+    "        ports:\n" +
+    "        - containerPort: 27017\n" +
+    "          name: "+msvcName+"-db-container-port\n" +
+    "        volumeMounts:\n" +
+    "        - name: "+msvcName+"-db-persistent-storage\n" +
+    "          mountPath: /data/db\n" +
+    "      volumes:\n" +
+    "      - name: "+msvcName+"-db-persistent-storage\n" +
+    "        persistentVolumeClaim:\n" +
+    "          claimName: "+msvcName+"-db-claim\n" +
+    "---\n" +
+    "kind: PersistentVolumeClaim\n" +
+    "apiVersion: v1\n" +
+    "metadata:\n" +
+    "  name: "+msvcName+"-db-claim\n" +
+    "  namespace: "+appName+"-development\n" +
+    "spec:\n" +
+    "  storageClassName: glusterfs\n" +
+    "  accessModes:\n" +
+    "    - ReadWriteOnce\n" +
+    "  volumeMode: Filesystem\n" +
+    "  resources:\n" +
+    "    requests:\n" +
+    "      storage: 8Gi\n"
+    ;
+
+    try {
+      BufferedWriter writer = new BufferedWriter(new FileWriter(msvcName + "/k8s/" + msvcName + "-database.yaml", true));
+      writer.write(database);
+      writer.close();
+    } catch (IOException ioe) {
+      ioe.printStackTrace();
+    }
+  }
+
+  public void createK8sDeployment(String msvcName, String dockerUsername, String appName, String msvcPort) {
 
     String deployment =
     "apiVersion: apps/v1\n" +
     "kind: Deployment\n" +
     "metadata:\n" +
     "  name: "+msvcName+"-deployment\n" +
-    "  namespace: "+msvcName+"-development\n" +
+    "  namespace: "+appName+"-development\n" +
     "  labels:\n" +
     "    app: "+msvcName+"\n" +
     "spec:\n" +
@@ -214,9 +339,13 @@ public class Apply {
     "        - name: "+msvcName+"-container\n" +
     "          imagePullPolicy: Always\n" +
     "          image: "+dockerUsername+"/"+msvcName+"\n" +
+    "          env:\n" +
+    "            # USE SECRET IN PRODUCTION\n" +
+    "          - name: MYDB_SERVICE_HOST\n" +
+    "            value: "+msvcName+"-db-service\n" +
     "          ports:\n" +
-    "            - name: "+msvcName+"-port\n" +
-    "              containerPort: REPLACE-WITH-CONTAINER-PORT-NUMBER\n"
+    "            - name: "+msvcName+"-container-port\n" +
+    "              containerPort: "+msvcPort+"\n"
     ;
 
     try {
@@ -229,21 +358,21 @@ public class Apply {
   }
 
 
-  public void createK8sService(String msvcName) {
+  public void createK8sService(String msvcName,String appName,String msvcPort) {
 
     String service =
     "apiVersion: v1\n" +
     "kind: Service\n" +
     "metadata:\n" +
     "  name: "+msvcName+"-service\n" +
-    "  namespace: "+msvcName+"-development\n" +
+    "  namespace: "+appName+"-development\n" +
     "  labels:\n" +
     "    app: "+msvcName+"\n" +
     "spec:\n" +
     "  type: ClusterIP\n" +
     "  ports:\n" +
-    "    - port: REPLACE-WITH-CONTAINER-PORT-EXAMPLE-80-FOR-NGINX-3000-FOR-NODEJS\n" +
-    "      targetPort: REPLACE-WITH-CONTAINER-PORT-EXAMPLE-80-FOR-NGINX-3000-FOR-NODEJS\n" +
+    "    - port: "+msvcPort+"\n" +
+    "      targetPort: "+msvcPort+"\n" +
     "      protocol: TCP\n" +
     "  selector:\n" +
     "    app: "+msvcName+"\n"
@@ -273,8 +402,9 @@ public class Apply {
         downloadInitCodeBase( this.cloudApp.getMicroservices()[i].get("initcodebase"), this.cloudApp.getMicroservices()[i].get("name"), this.cloudApp.getMicroservices()[i].get("sourcerepo") );
         copyCacheIntoRepo(this.cloudApp.getMicroservices()[i].get("name"));
         createK8sFolder( this.cloudApp.getMicroservices()[i].get("name") );
-        createK8sDeployment( this.cloudApp.getMicroservices()[i].get("name"), this.cloudApp.getAppsettings().get("dockerhubuser") );
-        createK8sService( this.cloudApp.getMicroservices()[i].get("name") );
+        createK8sDeployment( this.cloudApp.getMicroservices()[i].get("name"), this.cloudApp.getAppsettings().get("dockerhubuser"),this.cloudApp.getAppsettings().get("name"),this.cloudApp.getMicroservices()[i].get("internalsvcport") );
+        createK8sService( this.cloudApp.getMicroservices()[i].get("name"),this.cloudApp.getAppsettings().get("name"),this.cloudApp.getMicroservices()[i].get("internalsvcport") );
+        createK8sDatabaseService( this.cloudApp.getMicroservices()[i].get("name"), this.cloudApp.getAppsettings().get("dockerhubuser"),this.cloudApp.getAppsettings().get("name") );
         microservices[i].replace("status","applied");
       }
     }
@@ -345,6 +475,7 @@ public class Apply {
         createSeedJob();
         createGroovyJobDSL();
         createMicroservices();
+        createAppIngress(this.appName);
         saveSettings();
         showPlan();
       }
