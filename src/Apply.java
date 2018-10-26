@@ -280,7 +280,7 @@ public class Apply {
     "        name: "+msvcName+"-db-container\n" +
     "        ports:\n" +
     "        - containerPort: 27017\n" +
-    "          name: "+msvcName+"-db-container-port\n" +
+    "          name: db-port\n" +
     "        volumeMounts:\n" +
     "        - name: "+msvcName+"-db-persistent-storage\n" +
     "          mountPath: /data/db\n" +
@@ -344,7 +344,7 @@ public class Apply {
     "          - name: MYDB_SERVICE_HOST\n" +
     "            value: "+msvcName+"-db-service\n" +
     "          ports:\n" +
-    "            - name: "+msvcName+"-container-port\n" +
+    "            - name: mcsvc-port\n" +
     "              containerPort: "+msvcPort+"\n"
     ;
 
