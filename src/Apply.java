@@ -100,6 +100,7 @@ public class Apply {
         "          remote {\n" +
         "            url(repoUrl); //Git Repository\n" +
         "            branch(\"master\");\n" +
+        "            credentials(\"\");\n" +
         "          }\n" +
         "        }\n" +
         "      }\n" +
@@ -184,7 +185,7 @@ public class Apply {
       }
     }
 
-    RunCommand.exec("rm "+ appName + "-globalsettings/k8s/*.yaml");
+    RunCommand.exec("rm -rf "+ appName + "-globalsettings/k8s/*.yaml");
     try {
       BufferedWriter writer = new BufferedWriter(new FileWriter(appName + "-globalsettings/k8s/app-ingress.yaml", true));
       writer.write(grooveMeBabyTonight);
@@ -192,6 +193,53 @@ public class Apply {
     } catch (IOException ioe) {
       ioe.printStackTrace();
     }
+
+    String ns =
+    "apiVersion: v1\n" +
+    "kind: Namespace\n" +
+    "metadata:\n" +
+    "  namespace: "+appName+"-development\n"
+    ;
+
+    try {
+      BufferedWriter writer = new BufferedWriter(new FileWriter(appName + "-globalsettings/k8s/app-namespace.yaml", true));
+      writer.write(ns);
+      writer.close();
+    } catch (IOException ioe) {
+      ioe.printStackTrace();
+    }
+
+    String util =
+    "apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2\n" +
+    "kind: Deployment\n" +
+    "metadata:\n" +
+    "  name: util-deployment\n" +
+    "  namespace: "+appName+"-development\n" +
+    "spec:\n" +
+    "  selector:\n" +
+    "    matchLabels:\n" +
+    "      app: util\n" +
+    "  strategy:\n" +
+    "    type: Recreate\n" +
+    "  template:\n" +
+    "    metadata:\n" +
+    "      labels:\n" +
+    "        app: util\n" +
+    "    spec:\n" +
+    "      containers:\n" +
+    "      - image: radial/busyboxplus:curl\n" +
+    "        name: util-container\n" +
+    "        command: [ \"sh\", \"-c\", \"while true; do echo $(hostname) v1; sleep 60; done\" ]\n"
+    ;
+
+    try {
+      BufferedWriter writer = new BufferedWriter(new FileWriter(appName + "-globalsettings/k8s/app-util.yaml", true));
+      writer.write(util);
+      writer.close();
+    } catch (IOException ioe) {
+      ioe.printStackTrace();
+    }
+
   }
 
   //Create cache folder
