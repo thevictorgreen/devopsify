@@ -100,7 +100,7 @@ public class Apply {
         "          remote {\n" +
         "            url(repoUrl); //Git Repository\n" +
         "            branch(\"master\");\n" +
-        "            credentials(\"\");\n" +
+        "            credentials(\"REPLACE_ME\");\n" +
         "          }\n" +
         "        }\n" +
         "      }\n" +
