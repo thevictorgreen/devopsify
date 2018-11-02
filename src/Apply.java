@@ -198,7 +198,7 @@ public class Apply {
     "apiVersion: v1\n" +
     "kind: Namespace\n" +
     "metadata:\n" +
-    "  namespace: "+appName+"-development\n"
+    "  name: "+appName+"-development\n"
     ;
 
     try {
